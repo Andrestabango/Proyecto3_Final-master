@@ -53,21 +53,5 @@ public class Reserva {
         this.persona = persona;
     }
 
-    public boolean asignarEspacio() {
-        parqueadero.imprimirEspacios();
-        int[][] matrizEspacios = parqueadero.calcularEspacios();
-        boolean[][] disponibilidad = parqueadero.getDisponibilidad();
 
-        for (int i = 0; i < matrizEspacios.length; i++) {
-            for (int j = 0; j < matrizEspacios[i].length; j++) {
-                if (disponibilidad[i][j]) {
-                    disponibilidad[i][j] = false;
-                    System.out.println("Reserva asignada en el espacio: Nivel " + (i + 1) + " Espacio " + (j + 1));
-                    return true;
-                }
-            }
-        }
-        System.out.println("No hay espacios disponibles.");
-        return false;
-    }
 }

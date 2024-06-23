@@ -24,5 +24,18 @@ public class ReservaParqueadero extends Reserva {
         this.precio = precio;
     }
 
+    @Override
+    public String toString() {
+        return "ReservaParqueadero" +
+                "tiempoReserva=" + tiempoReserva +
+                "precio=" + tiempoReserva*0.75 +
+                "horasReserva=" + getHorasReserva() +
+                "dia" + getDia() + '\'' +
+                "parqueadero" + getParqueadero() +
+                "vehiculo" + getVehiculo() +
+                "persona" + persona
+                ;
+    }
+
 
 }

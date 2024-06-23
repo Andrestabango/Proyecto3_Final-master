@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.DefaultComboBoxModel;
 
 public class Ventana {
     private JTabbedPane tabbedPane1;
@@ -45,10 +44,12 @@ public class Ventana {
     private JButton modificarReservaButton;
     private JButton eliminarReservaButton;
     private JButton buscarReservaButton;
+    private JList list3Reserva;
+    private JTextField textField3horaInicioReserva;
 
     private Lista personas = new Lista();
     private ListaParqueadero parqueaderos = new ListaParqueadero();
-    private ListaReserva reserva = new ListaReserva();
+    private ListaReservaParqueadero reservasParqueadero = new ListaReservaParqueadero();
 
     // Definir credenciales de administrador
     private final String adminUsername = "admin";
@@ -339,78 +340,86 @@ public class Ventana {
         tabbedPane1.setEnabledAt(tabbedPane1.indexOfComponent(pestanaParqueadero), false);
         tabbedPane1.setEnabledAt(tabbedPane1.indexOfComponent(pestanaVehiculos), false);
         //hola
-        reservarButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    // Obtener los datos de los campos de texto y combobox
-                    String dia = comboDiaReserva.getSelectedItem().toString();
-                    int horasReserva = (Integer) spinnerHorasReserva.getValue();
-                    String nombreParqueadero = comboParqueaderoReserva.getSelectedItem().toString();
-                    String placaVehiculo = textPlacaReserva.getText();
-                    String nombrePersona = textPersonaReserva.getText();
+            reservarButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        // Obtener los datos de los campos de texto y combobox
+                        String dia = comboDiaReserva.getSelectedItem().toString();
+                        int horasReserva = (Integer) spinnerHorasReserva.getValue();
+                        String nombreParqueadero = comboParqueaderoReserva.getSelectedItem().toString();
+                        String placaVehiculo = textPlacaReserva.getText();
+                        String nombrePersona = textPersonaReserva.getText();
 
-                    // Validar campos
-                    if (dia.isEmpty() || nombreParqueadero.isEmpty() || placaVehiculo.isEmpty() || nombrePersona.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "Todos los campos deben ser llenados", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    // Buscar el parqueadero
-                    Parqueadero parqueadero = parqueaderos.buscarParqeuadero(nombreParqueadero);
-                    if (parqueadero == null) {
-                        JOptionPane.showMessageDialog(null, "Parqueadero no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    // Buscar el vehículo
-                    Vehiculo vehiculo = null;
-                    for (Persona p : personas.getPersonas()) {
-                        for (Vehiculo v : p.getVehiculos()) {
-                            if (v.getPlaca().equalsIgnoreCase(placaVehiculo)) {
-                                vehiculo = v;
-                                break;
-                            }
+                        // Validar campos
+                        if (dia.isEmpty() || nombreParqueadero.isEmpty() || placaVehiculo.isEmpty() || nombrePersona.isEmpty()) {
+                            JOptionPane.showMessageDialog(null, "Todos los campos deben ser llenados", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
                         }
-                        if (vehiculo != null) break;
+
+                        // Buscar el parqueadero
+                        Parqueadero parqueadero = parqueaderos.buscarParqeuadero(nombreParqueadero);
+                        if (parqueadero == null) {
+                            JOptionPane.showMessageDialog(null, "Parqueadero no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // Buscar el vehículo
+                        Vehiculo vehiculo = null;
+                        for (Persona p : personas.getPersonas()) {
+                            for (Vehiculo v : p.getVehiculos()) {
+                                if (v.getPlaca().equalsIgnoreCase(placaVehiculo)) {
+                                    vehiculo = v;
+                                    break;
+                                }
+                            }
+                            if (vehiculo != null) break;
+                        }
+
+                        if (vehiculo == null) {
+                            JOptionPane.showMessageDialog(null, "Vehículo no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // Buscar la persona
+                        Persona persona = personas.buscarPersonaNombre(nombrePersona);
+                        if (persona == null) {
+                            JOptionPane.showMessageDialog(null, "Persona no encontrada", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // Crear una nueva reserva
+                        double precio = horasReserva * 0.75; // Suponiendo un precio fijo por hora
+                        ReservaParqueadero nuevaReserva = new ReservaParqueadero(horasReserva, dia, parqueadero, vehiculo, persona, horasReserva, precio);
+
+                        // Asignar espacio en el parqueadero
+                        int espacioAsignado = parqueadero.asignarEspacioDisponible();
+                        if (espacioAsignado == -1) {
+                            JOptionPane.showMessageDialog(null, "No hay espacios disponibles en el parqueadero", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // Agregar la reserva a la lista de reservas
+                        reservasParqueadero.agregarReserva(nuevaReserva);
+
+                        // Actualizar el JList de reservas
+                        llenarJlistReserva();
+
+                        // Mostrar mensaje de éxito con detalles adicionales
+                        JOptionPane.showMessageDialog(null, "Reserva creada con éxito\n" +
+                                "Día: " + dia +
+                                "\nHoras: " + horasReserva +
+                                "\nParqueadero: " + nombreParqueadero +
+                                "\nVehículo: " + placaVehiculo +
+                                "\nPersona: " + nombrePersona +
+                                "\nEspacio asignado: " + espacioAsignado +
+                                "\nCosto de estancia: $" + precio);
+
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null, "Error al crear la reserva: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
-
-                    if (vehiculo == null) {
-                        JOptionPane.showMessageDialog(null, "Vehículo no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    // Buscar la persona
-                    Persona persona = personas.buscarPersonaNombre(nombrePersona);
-                    if (persona == null) {
-                        JOptionPane.showMessageDialog(null, "Persona no encontrada", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    // Crear una nueva reserva
-
-
-                    // Agregar la reserva a la lista de reservas
-                    reserva.agregarReserva(new Reserva(horasReserva, dia, parqueadero, vehiculo, persona));
-
-                    // Actualizar disponibilidad de espacios en el parqueadero
-
-//
-                    // Mostrar mensaje de éxito
-                    JOptionPane.showMessageDialog(null, "Reserva creada con éxito\n" +
-                            "Día: " + dia +
-                            "\nHoras: " + horasReserva +
-                            "\nParqueadero: " + nombreParqueadero +
-                            "\nVehículo: " + placaVehiculo +
-                            "\nPersona: " + nombrePersona);
-
-
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error al crear la reserva: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            }
-        });
-
+            });
     }
 
     public void limpiarDatos() {
@@ -449,7 +458,13 @@ public class Ventana {
         }
         list2.setModel(dl);
     }
-
+    public void llenarJlistReserva() {
+        DefaultListModel<ReservaParqueadero> dl1 = new DefaultListModel<>();
+        for (ReservaParqueadero reserva : reservasParqueadero.getReservas()) {
+            dl1.addElement(reserva);
+        }
+        list3Reserva.setModel(dl1);
+    }
 
     public void llenarComboParqueaderoReserva() {
         comboParqueaderoReserva.removeAllItems();  // Limpiar el combobox
@@ -457,6 +472,9 @@ public class Ventana {
             comboParqueaderoReserva.addItem(parqueadero.getLugar());
         }
     }
+
+
+
     public static boolean validarStringLetras(String dato) {
         return dato.matches("[a-zA-Z ]*");
     }
